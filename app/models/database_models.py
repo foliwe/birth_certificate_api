@@ -1,6 +1,12 @@
 from sqlalchemy import Column, Integer, String, Date, ForeignKey
 from sqlalchemy.orm import relationship
-from app.database import Base
+
+try:
+    # Try relative import first (when used as module)
+    from ..database import Base
+except ImportError:
+    # Fall back to direct import (when running scripts directly)
+    from database import Base
 
 class Certificate(Base):
     __tablename__ = "certificates"

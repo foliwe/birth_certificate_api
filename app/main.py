@@ -1,11 +1,16 @@
+import os
 from fastapi import FastAPI, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from pydantic import BaseModel
+from dotenv import load_dotenv
 
-from app.database import engine, get_db
-from app.models import models, database_models
-from app.models.database_models import Base
+from .database import engine, get_db
+from .models import models, database_models
+from .models.database_models import Base
+
+# Load environment variables
+load_dotenv()
 
 class PaginatedBirthCertificates(BaseModel):
     total: int
@@ -16,7 +21,32 @@ class PaginatedBirthCertificates(BaseModel):
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Birth Certificate Registration API")
+# Get configuration from environment variables
+API_TITLE = os.getenv("API_TITLE", "Birth Certificate Registration API")
+API_VERSION = os.getenv("API_VERSION", "1.0.0")
+
+app = FastAPI(
+    title=API_TITLE,
+    version=API_VERSION,
+    description="A comprehensive API for managing birth certificate registrations",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+@app.get("/", tags=["Root"])
+def read_root():
+    """Root endpoint with API information."""
+    return {
+        "message": "Birth Certificate Registration API",
+        "version": API_VERSION,
+        "docs": "/docs",
+        "redoc": "/redoc"
+    }
+
+@app.get("/health", tags=["Health"])
+def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy", "api": API_TITLE, "version": API_VERSION}
 
 @app.post("/birth-certificate/", response_model=models.BirthCertificate)
 def create_birth_certificate(birth_certificate: models.BirthCertificate, db: Session = Depends(get_db)):
@@ -201,4 +231,16 @@ def get_birth_certificates(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    
+    # Get configuration from environment variables
+    host = os.getenv("API_HOST", "0.0.0.0")
+    port = int(os.getenv("API_PORT", "8000"))
+    debug = os.getenv("DEBUG", "True").lower() == "true"
+    
+    uvicorn.run(
+        app, 
+        host=host, 
+        port=port, 
+        reload=debug,
+        log_level="info" if not debug else "debug"
+    )

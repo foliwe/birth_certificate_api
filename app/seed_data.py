@@ -4,11 +4,13 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 import sys
 import os
+
+# Add the parent directory to the path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.database import SessionLocal, engine
-from app.models import database_models
-from app.models.database_models import Base
+from database import SessionLocal, engine
+from models import database_models
+from models.database_models import Base
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
